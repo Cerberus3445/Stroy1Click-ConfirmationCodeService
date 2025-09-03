@@ -53,35 +53,33 @@ public class AdviceController {
     @ExceptionHandler(RequestNotPermitted.class)
     public ProblemDetail handleException(RequestNotPermitted exception){
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.TOO_MANY_REQUESTS, exception.getMessage()
-        );
-        problemDetail.setTitle(this.messageSource.getMessage(
-                "error.title.too_many_requests",
-                null,
-                Locale.getDefault()
-        ));
-        problemDetail.setDetail(
+                HttpStatus.TOO_MANY_REQUESTS,
                 this.messageSource.getMessage(
                         "error.details.too_many_requests",
                         null,
                         Locale.getDefault()
                 )
         );
+        problemDetail.setTitle(this.messageSource.getMessage(
+                "error.title.too_many_requests",
+                null,
+                Locale.getDefault()
+        ));
         return problemDetail;
     }
 
     @ExceptionHandler(CallNotPermittedException.class)
     public ProblemDetail handleException(CallNotPermittedException exception){
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage()
+                HttpStatus.SERVICE_UNAVAILABLE,
+                this.messageSource.getMessage(
+                        "error.description.service_unavailable",
+                        null,
+                        Locale.getDefault()
+                )
         );
         problemDetail.setTitle(this.messageSource.getMessage(
                 "error.title.service_unavailable",
-                null,
-                Locale.getDefault()
-        ));
-        problemDetail.setDetail(this.messageSource.getMessage(
-                "error.description.service_unavailable",
                 null,
                 Locale.getDefault()
         ));
@@ -91,15 +89,15 @@ public class AdviceController {
     @ExceptionHandler(ServiceUnavailableException.class)
     public ProblemDetail handleException(ServiceUnavailableException exception){
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage()
+                HttpStatus.SERVICE_UNAVAILABLE,
+                this.messageSource.getMessage(
+                        "error.description.service_unavailable",
+                        null,
+                        Locale.getDefault()
+                )
         );
         problemDetail.setTitle(this.messageSource.getMessage(
                 "error.title.service_unavailable",
-                null,
-                Locale.getDefault()
-        ));
-        problemDetail.setDetail(this.messageSource.getMessage(
-                "error.description.service_unavailable",
                 null,
                 Locale.getDefault()
         ));

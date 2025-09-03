@@ -78,7 +78,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
         sendEmail(confirmationCode.getCode(), user);
     }
 
-      /**
+    /**
     * Метод повторно создает код подтверждения для пользователя.
     * Код подтверждения уникален для каждого пользователя и имеет тип.
     * Метод проверяет, существует ли у пользователя уже код подтверждения с таким же типом.
