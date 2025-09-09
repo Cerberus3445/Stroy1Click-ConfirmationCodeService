@@ -41,6 +41,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
 
     private final EmailClient emailClient;
 
+    private final JwtUtil jwtUtil;
 
     /**
      * Метод создает новый код подтверждения для пользователя.
@@ -189,7 +190,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
         this.userClient.updatePassword(new UserServiceUpdatePasswordRequest(passwordRequest.getNewPassword(),
                 passwordRequest.getCodeVerificationRequest().getEmail()));
         this.confirmationCodeRepository.deleteByCode(confirmationCode.getCode());
-        this.authClient.logoutOnAllDevices(user.getId(), JwtUtil.generateToken(user));
+        this.authClient.logoutOnAllDevices(user.getId(), jwtUtil.generateToken(user));
     }
 
       /**
@@ -236,7 +237,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
         return count;
     }
 
-    public void sendEmail(Integer code, UserDto user){
+    private void sendEmail(Integer code, UserDto user){
         SendEmailRequest sendEmailRequest = new SendEmailRequest(code, user);
         this.emailClient.sendEmail(sendEmailRequest);
     }

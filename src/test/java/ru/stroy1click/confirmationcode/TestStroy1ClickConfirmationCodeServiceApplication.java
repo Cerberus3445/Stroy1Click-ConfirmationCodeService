@@ -5,7 +5,9 @@ import org.springframework.boot.SpringApplication;
 public class TestStroy1ClickConfirmationCodeServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.from(Stroy1ClickConfirmationCodeServiceApplication::main).with(TestcontainersConfiguration.class).run(args);
+        SpringApplication.from(Stroy1ClickConfirmationCodeServiceApplication::main)
+                .with(TestcontainersConfiguration.class)
+                .run(args);
     }
 
 }

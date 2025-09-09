@@ -1,10 +1,12 @@
 package ru.stroy1click.confirmationcode.model;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Data
 @AllArgsConstructor
@@ -15,5 +17,7 @@ public class CreateConfirmationCodeRequest {
     private Type confirmationCodeType;
 
     @NotBlank(message = "{validation.create.confirmation.code.request.email.not_blank}")
+    @Email(message = "{validation.create.confirmation.code.request.email.valid}")
+    @Length(min = 8, max = 50, message = "{validation.create.confirmation.code.request.email.length}")
     private String email;
 }

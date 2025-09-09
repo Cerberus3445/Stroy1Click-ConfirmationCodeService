@@ -32,6 +32,7 @@ public class UserDto {
     private String email;
 
     @NotBlank(message = "{validation.userdto.password.not_blank}")
+    @Length(min = 8, max = 60, message = "{validation.userdto.password.length}")
     private String password;
 
     @NotNull(message = "{validation.userdto.email_confirmed.not_null}")
