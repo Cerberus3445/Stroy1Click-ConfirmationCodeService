@@ -40,14 +40,14 @@ public class ConfirmationCodeController {
         this.confirmationCodeService.confirmEmail(codeVerificationRequest);
         return ResponseEntity.ok(
                 this.messageSource.getMessage(
-                        "info.confirmation.code.sent",
+                        "info.confirmation.code.email.confirmed",
                         null,
                         Locale.getDefault()
                 )
         );
     }
 
-    @PostMapping("/update-password")
+    @PostMapping("/password-reset")
     @Operation(summary = "Обновление пароля")
     public ResponseEntity<String> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest,
                                                  BindingResult bindingResult){
@@ -65,7 +65,7 @@ public class ConfirmationCodeController {
         );
     }
 
-    @PatchMapping("/recreate")
+    @PostMapping("/regeneration")
     @Operation(summary = "Пересоздание кода подтверждения и отправка его по почте пользователю")
     public ResponseEntity<String> recreate(@RequestBody @Valid CreateConfirmationCodeRequest codeRequest,
                                            BindingResult bindingResult){

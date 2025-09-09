@@ -28,10 +28,11 @@ public class UserDto {
 
     @NotBlank(message = "{validation.userdto.email.not_blank}")
     @Email(message = "{validation.userdto.email.valid}")
-    @Length(min = 5, max = 50, message = "{validation.userdto.email.length}")
+    @Length(min = 8, max = 50, message = "{validation.userdto.email.length}")
     private String email;
 
     @NotBlank(message = "{validation.userdto.password.not_blank}")
+    @Length(min = 8, max = 60, message = "{validation.userdto.password.length}")
     private String password;
 
     @NotNull(message = "{validation.userdto.email_confirmed.not_null}")

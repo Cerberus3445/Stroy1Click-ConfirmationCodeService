@@ -5,24 +5,26 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import ru.stroy1click.confirmationcode.dto.UserDto;
 
 import java.security.Key;
 import java.util.*;
 
+@Component
 public class JwtUtil {
 
     @Value(value = "${jwt.secret}")
-    private static String SECRET;
+    private String SECRET;
 
-    public static String generateToken(UserDto user) {
+    public String generateToken(UserDto user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole());
         claims.put("emailConfirmed", user.getEmailConfirmed());
         return createToken(claims, user);
     }
 
-    private static String createToken(Map<String, Object> claims, UserDto user) {
+    private String createToken(Map<String, Object> claims, UserDto user) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getEmail())
@@ -31,7 +33,7 @@ public class JwtUtil {
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
     }
 
-    private static Key getSignKey() {
+    private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
