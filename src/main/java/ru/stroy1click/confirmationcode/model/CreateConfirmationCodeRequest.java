@@ -13,11 +13,11 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 public class CreateConfirmationCodeRequest {
 
-    @NotNull(message = "{validation.create.confirmation.code.request.confirmation_code_type.not_null}")
+    @NotNull(message = "{validation.create_confirmation_code_request.confirmation_code_type.not_null}")
     private Type confirmationCodeType;
 
-    @NotBlank(message = "{validation.create.confirmation.code.request.email.not_blank}")
-    @Email(message = "{validation.create.confirmation.code.request.email.valid}")
-    @Length(min = 8, max = 50, message = "{validation.create.confirmation.code.request.email.length}")
+    @NotBlank(message = "{validation.create_confirmation_code_request.email.not_blank}")
+    @Email(message = "{validation.create_confirmation_code_request.email.valid}")
+    @Length(min = 8, max = 50, message = "{validation.create_confirmation_code_request.email.length}")
     private String email;
 }

@@ -1,0 +1,330 @@
+package ru.stroy1click.confirmationcode;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
+import ru.stroy1click.confirmationcode.client.AuthClient;
+import ru.stroy1click.confirmationcode.client.EmailClient;
+import ru.stroy1click.confirmationcode.client.UserClient;
+import ru.stroy1click.confirmationcode.dto.UserDto;
+import ru.stroy1click.confirmationcode.exception.NotFoundException;
+import ru.stroy1click.confirmationcode.exception.ValidationException;
+import ru.stroy1click.confirmationcode.model.*;
+import ru.stroy1click.confirmationcode.repository.ConfirmationCodeRepository;
+import ru.stroy1click.confirmationcode.service.impl.ConfirmationCodeServiceImpl;
+import ru.stroy1click.confirmationcode.util.JwtUtil;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class ConfirmationCodeUnitTests {
+
+    @Mock
+    private ConfirmationCodeRepository confirmationCodeRepository;
+
+    @Mock
+    private AuthClient authClient;
+
+    @Mock
+    private UserClient userClient;
+
+    @Mock
+    private MessageSource messageSource;
+
+    @Mock
+    private EmailClient emailClient;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Spy
+    private Random random = new Random();
+
+    @InjectMocks
+    private ConfirmationCodeServiceImpl confirmationCodeService;
+
+    private UserDto userDto;
+
+    @BeforeEach
+    void setUp() {
+        this.userDto = UserDto.builder()
+                .id(1L)
+                .firstName("John")
+                .lastName("Doe")
+                .email("john.doe@example.com")
+                .password("encoded_password")
+                .role(Role.ROLE_USER)
+                .emailConfirmed(false)
+                .build();
+    }
+
+    @Test
+    void create_WhenNoExistingCode_CreatesNewCode() {
+        // Given
+        CreateConfirmationCodeRequest request = new CreateConfirmationCodeRequest(Type.EMAIL, "john.doe@example.com");
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567, LocalDateTime.now().plusHours(24), Type.EMAIL, 1L);
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(userDto);
+        when(this.confirmationCodeRepository.countByTypeAndUserId(Type.EMAIL, 1L))
+                .thenReturn(0);
+        when(confirmationCodeRepository.save(any(ConfirmationCode.class))).thenReturn(confirmationCode);
+
+        // When
+        this.confirmationCodeService.create(request);
+
+        // Then
+        verify(this.confirmationCodeRepository).save(any(ConfirmationCode.class));
+        verify(this.emailClient).sendEmail(any(SendEmailRequest.class));
+    }
+
+    @Test
+    void create_WhenExistingCode_ThrowsValidationException() {
+        // Given
+        CreateConfirmationCodeRequest request = new CreateConfirmationCodeRequest(Type.EMAIL, "john.doe@example.com");
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.countByTypeAndUserId(Type.EMAIL, 1L)).thenReturn(1);
+        when(this.messageSource.getMessage(eq("error.confirmation_code.already_sent"), any(), any()))
+                .thenReturn("Код подтверждения уже был отправлен на вашу почту");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.create(request));
+        assertEquals("Код подтверждения уже был отправлен на вашу почту", exception.getMessage());
+
+        verify(this.confirmationCodeRepository, never()).save(any());
+    }
+
+    @Test
+    void create_WhenEmailAlreadyConfirmed_ThrowsValidationException() {
+        // Given
+        this.userDto.setEmailConfirmed(true);
+        CreateConfirmationCodeRequest request = new CreateConfirmationCodeRequest(Type.EMAIL, "john.doe@example.com");
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.messageSource.getMessage(eq("error.email.already_confirmed"), any(), any()))
+                .thenReturn("Почта уже была подтверждена");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.create(request));
+        assertEquals("Почта уже была подтверждена", exception.getMessage());
+
+        verify(this.confirmationCodeRepository, never()).save(any());
+    }
+
+    @Test
+    void recreate_WhenExistingCode_RegeneratesCode() {
+        // Given
+        CreateConfirmationCodeRequest request = new CreateConfirmationCodeRequest(Type.EMAIL, "john.doe@example.com");
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567, LocalDateTime.now().plusHours(24), Type.EMAIL, 1L);
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(userDto);
+        when(this.confirmationCodeRepository.countByTypeAndUserId(Type.EMAIL, 1L)).thenReturn(1);
+        when(confirmationCodeRepository.save(any(ConfirmationCode.class))).thenReturn(confirmationCode);
+
+        // When
+        this.confirmationCodeService.recreate(request);
+
+        // Then
+        verify(this.confirmationCodeRepository).deleteByTypeAndUserId(Type.EMAIL, 1L);
+        verify(this.confirmationCodeRepository).save(any(ConfirmationCode.class));
+        verify(this.emailClient).sendEmail(any(SendEmailRequest.class));
+    }
+
+    @Test
+    void recreate_WhenNoExistingCode_ThrowsValidationException() {
+        // Given
+        CreateConfirmationCodeRequest request = new CreateConfirmationCodeRequest(Type.EMAIL, "john.doe@example.com");
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.countByTypeAndUserId(Type.EMAIL, 1L)).thenReturn(0);
+        when(this.messageSource.getMessage(eq("error.confirmation.code.recreate_failed"), any(), any()))
+                .thenReturn("Вы не можете пересоздать код подтверждения, так как письмо не было отправлено на вашу электронную почту");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.recreate(request));
+        assertEquals("Вы не можете пересоздать код подтверждения, так как письмо не было отправлено на вашу электронную почту",
+                exception.getMessage());
+
+        verify(this.confirmationCodeRepository, never()).deleteByTypeAndUserId(any(), anyLong());
+        verify(this.confirmationCodeRepository, never()).save(any());
+    }
+
+    @Test
+    void confirmEmail_WithValidCode_ConfirmsEmail() {
+        // Given
+        CodeVerificationRequest request = new CodeVerificationRequest("john.doe@example.com", 1234567);
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567,
+                LocalDateTime.now().plusHours(1), Type.EMAIL, 1L);
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, 1L))
+                .thenReturn(Optional.of(confirmationCode));
+
+        // When
+        this.confirmationCodeService.confirmEmail(request);
+
+        // Then
+        verify(this.userClient).updateEmailConfirmedStatus("john.doe@example.com");
+        verify(this.confirmationCodeRepository).deleteById(1L);
+    }
+
+    @Test
+    void confirmEmail_WhenCodeNotFound_ThrowsNotFoundException() {
+        // Given
+        CodeVerificationRequest request = new CodeVerificationRequest("john.doe@example.com", 1234567);
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, 1L))
+                .thenReturn(Optional.empty());
+        when(this.messageSource.getMessage(eq("error.confirmation.code.not_found"), any(), any()))
+                .thenReturn("Код подтверждения не найден");
+
+        // When & Then
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> this.confirmationCodeService.confirmEmail(request));
+        assertEquals("Код подтверждения не найден", exception.getMessage());
+    }
+
+    @Test
+    void confirmEmail_WithInvalidCode_ThrowsValidationException() {
+        // Given
+        CodeVerificationRequest request = new CodeVerificationRequest("john.doe@example.com", 7654321);
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567,
+                LocalDateTime.now().plusHours(1), Type.EMAIL, 1L);
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, 1L))
+                .thenReturn(Optional.of(confirmationCode));
+        when(this.messageSource.getMessage(eq("error.confirmation.code.not_valid"), any(), any()))
+                .thenReturn("Код подтверждения не валиден");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.confirmEmail(request));
+        assertEquals("Код подтверждения не валиден", exception.getMessage());
+
+        verify(this.userClient, never()).updateEmailConfirmedStatus(anyString());
+        verify(this.confirmationCodeRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void confirmEmail_WithExpiredCode_ThrowsValidationException() {
+        // Given
+        CodeVerificationRequest request = new CodeVerificationRequest("john.doe@example.com", 1234567);
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567,
+                LocalDateTime.now().minusHours(1), Type.EMAIL, 1L);
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, 1L))
+                .thenReturn(Optional.of(confirmationCode));
+        when(this.messageSource.getMessage(eq("error.confirmation.code.not_valid"), any(), any()))
+                .thenReturn("Код подтверждения не валиден");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.confirmEmail(request));
+        assertEquals("Код подтверждения не валиден", exception.getMessage());
+
+        verify(this.userClient, never()).updateEmailConfirmedStatus(anyString());
+        verify(this.confirmationCodeRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void updatePassword_WithValidCodeAndMatchingPasswords_UpdatesPassword() {
+        // Given
+        CodeVerificationRequest codeRequest = new CodeVerificationRequest("john.doe@example.com", 1234567);
+        UpdatePasswordRequest request = new UpdatePasswordRequest("newPassword123", "newPassword123", codeRequest);
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567,
+                LocalDateTime.now().plusHours(1), Type.PASSWORD, 1L);
+        UserServiceUpdatePasswordRequest expectedUpdateRequest = new UserServiceUpdatePasswordRequest(
+                "newPassword123", "john.doe@example.com");
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.PASSWORD, 1L))
+                .thenReturn(Optional.of(confirmationCode));
+        when(this.jwtUtil.generateToken(this.userDto)).thenReturn("generated_token");
+
+        // When
+        this.confirmationCodeService.updatePassword(request);
+
+        // Then
+        verify(this.userClient).updatePassword(expectedUpdateRequest);
+        verify(this.confirmationCodeRepository).deleteByCode(1234567);
+        verify(this.authClient).logoutOnAllDevices(1L, "generated_token");
+    }
+
+    @Test
+    void updatePassword_WhenCodeNotFound_ThrowsNotFoundException() {
+        // Given
+        CodeVerificationRequest codeRequest = new CodeVerificationRequest("john.doe@example.com", 1234567);
+        UpdatePasswordRequest request = new UpdatePasswordRequest("newPassword123", "newPassword123", codeRequest);
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.PASSWORD, 1L))
+                .thenReturn(Optional.empty());
+
+        // When & Then
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> this.confirmationCodeService.updatePassword(request));
+
+        verify(this.userClient, never()).updatePassword(any());
+        verify(this.confirmationCodeRepository, never()).deleteByCode(anyInt());
+        verify(this.authClient, never()).logoutOnAllDevices(anyLong(), anyString());
+    }
+
+    @Test
+    void updatePassword_WithInvalidCode_ThrowsValidationException() {
+        // Given
+        CodeVerificationRequest codeRequest = new CodeVerificationRequest("john.doe@example.com", 7654321);
+        UpdatePasswordRequest request = new UpdatePasswordRequest("newPassword123", "newPassword123", codeRequest);
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567,
+                LocalDateTime.now().plusHours(1), Type.PASSWORD, 1L);
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.PASSWORD, 1L))
+                .thenReturn(Optional.of(confirmationCode));
+        when(this.messageSource.getMessage(eq("error.confirmation.code.not_valid"), any(), any()))
+                .thenReturn("Код подтверждения не валиден");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.updatePassword(request));
+        assertEquals("Код подтверждения не валиден", exception.getMessage());
+
+        verify(this.userClient, never()).updatePassword(any());
+        verify(this.confirmationCodeRepository, never()).deleteByCode(anyInt());
+        verify(this.authClient, never()).logoutOnAllDevices(anyLong(), anyString());
+    }
+
+    @Test
+    void updatePassword_WithNonMatchingPasswords_ThrowsValidationException() {
+        // Given
+        CodeVerificationRequest codeRequest = new CodeVerificationRequest("john.doe@example.com", 1234567);
+        UpdatePasswordRequest request = new UpdatePasswordRequest("newPassword123", "differentPassword", codeRequest);
+        ConfirmationCode confirmationCode = new ConfirmationCode(1L, 1234567,
+                LocalDateTime.now().plusHours(1), Type.PASSWORD, 1L);
+
+        when(this.userClient.getUserByEmail("john.doe@example.com")).thenReturn(this.userDto);
+        when(this.confirmationCodeRepository.findByTypeAndUserId(Type.PASSWORD, 1L))
+                .thenReturn(Optional.of(confirmationCode));
+        when(this.messageSource.getMessage(eq("error.password.not_match"), any(), any()))
+                .thenReturn("Пароли не совпадают");
+
+        // When & Then
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> this.confirmationCodeService.updatePassword(request));
+        assertEquals("Пароли не совпадают", exception.getMessage());
+
+        verify(this.userClient, never()).updatePassword(any());
+        verify(this.confirmationCodeRepository, never()).deleteByCode(anyInt());
+        verify(this.authClient, never()).logoutOnAllDevices(anyLong(), anyString());
+    }
+}

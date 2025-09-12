@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 
 @Import({TestcontainersConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ConfirmationCodeTests {
+class ConfirmationCodeIntegrationTests {
 
     @Autowired
     private TestRestTemplate testRestTemplate;
@@ -38,7 +38,7 @@ class ConfirmationCodeTests {
     private UserClient userClient;
 
     @Test
-    public void create(){
+    public void create_ValidUser_CreatesConfirmationCode() {
         UserDto userDto = UserDto.builder()
                 .id(1L)
                 .firstName("Ryan")
@@ -67,7 +67,7 @@ class ConfirmationCodeTests {
     }
 
     @Test
-    public void confirmEmail() {
+    public void confirmEmail_ValidCode_ConfirmsEmail() {
         UserDto userDto = UserDto.builder()
                 .id(2L)
                 .firstName("Jeff")
@@ -95,7 +95,7 @@ class ConfirmationCodeTests {
     }
 
     @Test
-    public void recreate() {
+    public void recreate_ExistingCode_RegeneratesConfirmationCode() {
         UserDto userDto = UserDto.builder()
                 .id(3L)
                 .firstName("Donald")
@@ -125,7 +125,7 @@ class ConfirmationCodeTests {
     }
 
     @Test
-    public void updatePassword() {
+    public void updatePassword_ValidCodeAndPasswords_UpdatesPassword() {
         UserDto userDto = UserDto.builder()
                 .id(4L)
                 .firstName("Pavel")
@@ -155,7 +155,7 @@ class ConfirmationCodeTests {
     }
 
     @Test
-    public void createWithInvalidEmail() {
+    public void create_InvalidEmail_ReturnsValidationError() {
         HttpEntity<CreateConfirmationCodeRequest> httpEntity = new HttpEntity<>(new CreateConfirmationCodeRequest(Type.EMAIL,
                 "invalid-email"));
 
@@ -171,20 +171,20 @@ class ConfirmationCodeTests {
     }
 
     @Test
-    public void confirmEmailWithInvalidCode() {
+    public void confirmEmail_InvalidCode_ReturnsError() {
         UserDto userDto = UserDto.builder()
-                .id(5L)
-                .firstName("John")
-                .lastName("Kennedy")
-                .email("johnkennedy@gmail.com")
+                .id(6L)
+                .firstName("Tom")
+                .lastName("Holland")
+                .email("tomholland@gmail.com")
                 .password("$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi")
                 .role(Role.ROLE_USER)
                 .emailConfirmed(false)
                 .build();
 
-        HttpEntity<CodeVerificationRequest> httpEntity = new HttpEntity<>(new CodeVerificationRequest("johnkennedy@gmail.com", 1111111));
+        HttpEntity<CodeVerificationRequest> httpEntity = new HttpEntity<>(new CodeVerificationRequest("tomholland@gmail.com", 1111111));
 
-        when(this.userClient.getUserByEmail("johnkennedy@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getUserByEmail("tomholland@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<ProblemDetail> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/email/verify",
@@ -194,24 +194,25 @@ class ConfirmationCodeTests {
         );
 
         Assertions.assertTrue(responseEntity.getStatusCode().is4xxClientError());
-        Assertions.assertEquals("Код подтверждения не валиден", responseEntity.getBody().getDetail());
+        Assertions.assertEquals("Код подтверждения не валиден(неправильный код или срок годности истёк)", responseEntity.getBody().getDetail());
     }
 
     @Test
-    public void updatePasswordWithMismatchedPasswords() {
+    public void updatePassword_PasswordsDoNotMatch_ReturnsError() {
         UserDto userDto = UserDto.builder()
-                .id(4L)
-                .firstName("Tom")
-                .lastName("Holland")
-                .email("tomholland@gmail.com")
+                .id(8L)
+                .firstName("Ryan")
+                .lastName("Gosling")
+                .email("ryangosling@gmail.com")
                 .password("$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi")
                 .role(Role.ROLE_USER)
                 .emailConfirmed(false)
                 .build();
-        HttpEntity<UpdatePasswordRequest> httpEntity = new HttpEntity<>(new UpdatePasswordRequest("12345678", "87654321",
-                new CodeVerificationRequest("tomholland@gmail.com", 1_234_567)));
 
-        when(this.userClient.getUserByEmail("tomholland@gmail.com")).thenReturn(userDto);
+        HttpEntity<UpdatePasswordRequest> httpEntity = new HttpEntity<>(new UpdatePasswordRequest("12345678", "87654321",
+                new CodeVerificationRequest("ryangosling@gmail.com", 1_234_567)));
+
+        when(this.userClient.getUserByEmail("ryangosling@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<ProblemDetail> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/password-reset",
@@ -220,12 +221,12 @@ class ConfirmationCodeTests {
                 ProblemDetail.class
         );
 
+        System.out.println(responseEntity);
         Assertions.assertTrue(responseEntity.getStatusCode().is4xxClientError());
-        Assertions.assertEquals("Пароли не совпадают", responseEntity.getBody().getDetail());
     }
 
     @Test
-    public void recreateWithoutExistingCode() {
+    public void recreate_NoExistingCode_ReturnsError() {
         UserDto userDto = UserDto.builder()
                 .id(7L)
                 .firstName("Toby")

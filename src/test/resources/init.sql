@@ -29,42 +29,48 @@ create table if not exists auth.refresh_tokens(
 );
 
 --Encode password is 123password123
--- Test: ConfirmationCodeTests create()
+-- Test: ConfirmationCodeIntegrationTests create_ValidUser_CreatesConfirmationCode()
 -- Description: создание кода подтверждения
 -- 1 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Ryan', 'Thompson', 'rayan_thompson@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
 
--- Test: ConfirmationCodeTests confirmEmail()
+-- Test: ConfirmationCodeIntegrationTests confirmEmail_ValidCode_ConfirmsEmail()
 -- Description: подтверждение почты
 -- 2 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Jeff', 'Bezos', 'jeffbezos@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
 insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (1234567, '2029-06-15 14:30:45.123456', 'EMAIL',2);
 
--- Test: ConfirmationCodeTests recreate()
+-- Test: ConfirmationCodeIntegrationTests recreate_ExistingCode_RegeneratesConfirmationCode()
 -- Description: пересоздание кода подтверждения
 -- 3 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Donald', 'Trump', 'donaldtrump@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
 insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (1234567, '2029-06-15 14:30:45.123456', 'EMAIL',3);
 
--- Test: ConfirmationCodeTests updatePassword()
+-- Test: ConfirmationCodeIntegrationTests updatePassword_ValidCodeAndPasswords_UpdatesPassword()
 -- Description: обновление пароля
 -- 4 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Pavel', 'Durov', 'paveldurovtg@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
 insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (1234567, '2029-06-15 14:30:45.123456', 'PASSWORD',4);
 
--- Test: ConfirmationCodeTests confirmEmailWithInvalidCode()
+-- Test: ConfirmationCodeIntegrationTests create_InvalidEmail_ReturnsValidationError()
 -- Description: попытка подтвердить почту с неверным кодом подтверждения
 -- 5 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('John', 'Kennedy', 'johnkennedy@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
 insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (8234567, '2029-06-15 14:30:45.123456', 'EMAIL',5);
 
--- Test: ConfirmationCodeTests updatePasswordWithMismatchedPasswords()
+-- Test: ConfirmationCodeIntegrationTests confirmEmail_InvalidCode_ReturnsError()
 -- Description: попытка обновить пароль с неверным кодом подтверждения
 -- 6 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Tom', 'Holland', 'tomholland@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
-insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (1234567, '2029-06-15 14:30:45.123456', 'PASSWORD',6);
+insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (1234567, '2029-06-15 14:30:45.123456', 'EMAIL',6);
 
--- Test: ConfirmationCodeTests recreateWithoutExistingCode()
+-- Test: ConfirmationCodeIntegrationTests recreateWithoutExistingCode()
 -- Description: попытка пересоздать код подтверждения при отсутствии изначального кода подтверждения(нельзя пересоздать код, если его даже не было)
 -- 7 userId
 insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Toby', 'Macgyver', 'tobymacgyver@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
+
+-- Test: ConfirmationCodeIntegrationTests updatePassword_PasswordsDoNotMatch_ReturnsError()
+-- Description: попытка обновить пароль при разных паролях(newPassword != confirmPassword)
+-- 8 userId
+insert into auth.users(first_name, last_name, email, password, role, email_confirmed) values ('Ryan', 'Gosling', 'ryangosling@gmail.com', '{bcrypt}$2a$12$5AvRdljjFvz1gJtVioGOJ./tAV8KHjln/fvKjrRXMAUxxqjYN4Vpi', 'ROLE_USER', false);
+insert into auth.confirmation_codes(code, expiration_date, type, user_id) values (1234567, '2029-06-15 14:30:45.123456', 'PASSWORD',8);
