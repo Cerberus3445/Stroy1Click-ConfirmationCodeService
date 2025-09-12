@@ -12,12 +12,12 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 public class UserServiceUpdatePasswordRequest {
 
-    @NotBlank(message = "{validation.user.service.update.password.request.new_password.not_blank}")
-    @Length(min = 8, max = 60, message = "${validation.user.service.update.password.request.new_password.length}")
+    @NotBlank(message = "{validation.user_service_update_password_request.new_password.not_blank}")
+    @Length(min = 8, max = 60, message = "${validation.user_service_update_password_request.new_password.length}")
     private String newPassword;
 
-    @NotBlank(message = "{validation.user.service.update.password.request.email.not_blank}")
-    @Email(message = "{validation.user.service.update.password.request.email.length}")
-    @Length(min = 8, max = 50, message = "{validation.user.service.update.password.request.email.valid}")
+    @NotBlank(message = "{validation.user_service_update_password_request.email.not_blank}")
+    @Email(message = "{validation.user_service_update_password_request.email.length}")
+    @Length(min = 8, max = 50, message = "{validation.user_service_update_password_request.email.valid}")
     private String email;
 }

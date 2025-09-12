@@ -40,7 +40,7 @@ public class ConfirmationCodeController {
         this.confirmationCodeService.confirmEmail(codeVerificationRequest);
         return ResponseEntity.ok(
                 this.messageSource.getMessage(
-                        "info.confirmation.code.email.confirmed",
+                        "info.confirmation_code.email.confirmed",
                         null,
                         Locale.getDefault()
                 )
@@ -77,7 +77,7 @@ public class ConfirmationCodeController {
 
         return ResponseEntity.ok(
                 this.messageSource.getMessage(
-                        "info.confirmation.code.sent",
+                        "info.confirmation_code.sent",
                         null,
                         Locale.getDefault()
                 )
@@ -96,7 +96,7 @@ public class ConfirmationCodeController {
 
         return ResponseEntity.ok(
                 this.messageSource.getMessage(
-                        "info.confirmation.code.sent",
+                        "info.confirmation_code.sent",
                         null,
                         Locale.getDefault()
                 )

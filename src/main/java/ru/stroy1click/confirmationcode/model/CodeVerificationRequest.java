@@ -13,11 +13,11 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 public class CodeVerificationRequest {
 
-    @NotBlank(message = "{validation.code.verification.request.email.not_blank}")
-    @Email(message = "{validation.code.verification.request.email.valid}")
-    @Length(min = 8, max = 50, message = "{validation.code.verification.request.email.length}")
+    @NotBlank(message = "{validation.code_verification_request.email.not_blank}")
+    @Email(message = "{validation.code_verification_request.email.valid}")
+    @Length(min = 8, max = 50, message = "{validation.code_verification_request.email.length}")
     private String email;
 
-    @NotNull(message = "{validation.code.verification.request.code.not_null}")
+    @NotNull(message = "{validation.code_verification_request.code.not_null}")
     private Integer code;
 }
