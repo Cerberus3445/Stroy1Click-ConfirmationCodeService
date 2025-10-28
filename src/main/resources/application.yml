@@ -25,6 +25,10 @@ spring:
 server:
   port: 6060
 
+logging:
+  file:
+    path: logs
+
 resilience4j:
   ratelimiter:
     instances:
@@ -51,8 +55,6 @@ resilience4j:
         waitDurationInOpenState: 120s
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
-        ignore-exceptions:
-          - ru.stroy1click.confirmationcode.exception.NotFoundException
       emailClient:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED

@@ -1,4 +1,4 @@
-package ru.stroy1click.confirmationcode;
+package ru.stroy1click.confirmationcode.integration;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

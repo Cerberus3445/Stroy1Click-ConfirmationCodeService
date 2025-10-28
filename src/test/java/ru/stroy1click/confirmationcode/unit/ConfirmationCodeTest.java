@@ -1,4 +1,4 @@
-package ru.stroy1click.confirmationcode;
+package ru.stroy1click.confirmationcode.unit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import ru.stroy1click.confirmationcode.client.AuthClient;
 import ru.stroy1click.confirmationcode.client.EmailClient;
 import ru.stroy1click.confirmationcode.client.UserClient;
 import ru.stroy1click.confirmationcode.dto.UserDto;
+import ru.stroy1click.confirmationcode.entity.ConfirmationCode;
 import ru.stroy1click.confirmationcode.exception.NotFoundException;
 import ru.stroy1click.confirmationcode.exception.ValidationException;
 import ru.stroy1click.confirmationcode.model.*;
@@ -28,7 +29,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ConfirmationCodeUnitTests {
+class ConfirmationCodeTest {
 
     @Mock
     private ConfirmationCodeRepository confirmationCodeRepository;
