@@ -1,4 +1,4 @@
-package ru.stroy1click.confirmationcode;
+package ru.stroy1click.confirmationcode.integration;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 
 @Import({TestcontainersConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ConfirmationCodeIntegrationTests {
+class ConfirmationCodeTests {
 
     @Autowired
     private TestRestTemplate testRestTemplate;

@@ -9,6 +9,7 @@ import ru.stroy1click.confirmationcode.client.AuthClient;
 import ru.stroy1click.confirmationcode.client.EmailClient;
 import ru.stroy1click.confirmationcode.client.UserClient;
 import ru.stroy1click.confirmationcode.dto.UserDto;
+import ru.stroy1click.confirmationcode.entity.ConfirmationCode;
 import ru.stroy1click.confirmationcode.exception.NotFoundException;
 import ru.stroy1click.confirmationcode.exception.ValidationException;
 import ru.stroy1click.confirmationcode.model.*;

@@ -1,10 +1,11 @@
-package ru.stroy1click.confirmationcode.model;
+package ru.stroy1click.confirmationcode.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.stroy1click.confirmationcode.model.Type;
 
 import java.time.LocalDateTime;
 

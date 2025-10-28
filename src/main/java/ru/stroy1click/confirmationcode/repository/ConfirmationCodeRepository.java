@@ -1,9 +1,8 @@
 package ru.stroy1click.confirmationcode.repository;
 
-import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import ru.stroy1click.confirmationcode.model.ConfirmationCode;
+import ru.stroy1click.confirmationcode.entity.ConfirmationCode;
 import ru.stroy1click.confirmationcode.model.Type;
 
 import java.util.List;
