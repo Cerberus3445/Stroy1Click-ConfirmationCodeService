@@ -133,7 +133,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
                 ));
 
         if(Objects.equals(confirmationCode.getCode(), codeRequest.getCode()) && LocalDateTime.now().isBefore(confirmationCode.getExpirationDate())){
-            this.userClient.updateEmailConfirmedStatus(codeRequest.getEmail());
+            this.userClient.updateEmailConfirmedStatus(new ConfirmEmailRequest(codeRequest.getEmail()));
             this.confirmationCodeRepository.deleteById(confirmationCode.getId());
         } else {
             throw new ValidationException(

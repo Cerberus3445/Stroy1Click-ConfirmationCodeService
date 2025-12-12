@@ -3,9 +3,13 @@ package ru.stroy1click.confirmationcode.client.impl;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import ru.stroy1click.confirmationcode.client.EmailClient;
+import ru.stroy1click.confirmationcode.exception.ServerErrorResponseException;
 import ru.stroy1click.confirmationcode.exception.ServiceUnavailableException;
 import ru.stroy1click.confirmationcode.model.SendEmailRequest;
 
@@ -23,15 +27,20 @@ public class EmailClientImpl implements EmailClient {
     }
 
     @Override
+    @Async("asyncTaskExecutor")
     public void sendEmail(SendEmailRequest sendEmailRequest) {
+        log.info("sendEmail {}", sendEmailRequest);
         try {
             this.restClient.post()
                     .uri("/send")
                     .body(sendEmailRequest)
                     .retrieve()
+                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                        throw new ServerErrorResponseException();
+                    })
                     .body(String.class);
-        } catch (Exception e){
-            log.error("sendEmail exception message: {}, cause: {}", e.getMessage(), e.getStackTrace());
+        } catch (ResourceAccessException e){
+            log.error("sendEmail error ", e);
             throw new ServiceUnavailableException();
         }
     }
