@@ -10,6 +10,7 @@ import ru.stroy1click.confirmationcode.dto.UserDto;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SendEmailRequest {
+
     private Integer code;
 
     private UserDto user;

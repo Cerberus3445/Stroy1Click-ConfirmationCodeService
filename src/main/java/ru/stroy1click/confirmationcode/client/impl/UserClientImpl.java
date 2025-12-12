@@ -1,8 +1,8 @@
 package ru.stroy1click.confirmationcode.client.impl;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import org.springframework.context.MessageSource;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.ResourceAccessException;
+import ru.stroy1click.confirmationcode.exception.ServerErrorResponseException;
 import ru.stroy1click.confirmationcode.exception.ServiceUnavailableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import ru.stroy1click.confirmationcode.client.UserClient;
 import ru.stroy1click.confirmationcode.dto.UserDto;
 import ru.stroy1click.confirmationcode.exception.NotFoundException;
+import ru.stroy1click.confirmationcode.model.ConfirmEmailRequest;
 import ru.stroy1click.confirmationcode.model.UserServiceUpdatePasswordRequest;
 
 @Slf4j
@@ -28,25 +29,44 @@ public class UserClientImpl implements UserClient {
     }
 
     @Override
-    public void updateEmailConfirmedStatus(String email) {
-        this.restClient.patch()
-                .uri("/email-status")
-                .body(email)
-                .retrieve()
-                .body(String.class);
+    public void updateEmailConfirmedStatus(ConfirmEmailRequest email) {
+        log.info("updateEmailConfirmedStatus {}", email);
+        try {
+            this.restClient.patch()
+                    .uri("/email-status")
+                    .body(email)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                        throw new ServerErrorResponseException();
+                    })
+                    .body(String.class);
+        }  catch (ResourceAccessException e){
+            log.error("updateEmailConfirmedStatus error ", e);
+            throw new ServiceUnavailableException();
+        }
     }
 
     @Override
-    public void updatePassword(UserServiceUpdatePasswordRequest request) {
-        this.restClient.patch()
-                .uri("/password")
-                .body(request)
-                .retrieve()
-                .body(String.class);
+    public void updatePassword(UserServiceUpdatePasswordRequest updatePasswordRequest) {
+        log.info("updatePassword {}", updatePasswordRequest);
+        try {
+            this.restClient.patch()
+                    .uri("/password")
+                    .body(updatePasswordRequest)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                        throw new ServerErrorResponseException();
+                    })
+                    .body(String.class);
+        } catch (ResourceAccessException e){
+            log.error("updatePassword error ", e);
+            throw new ServiceUnavailableException();
+        }
     }
 
     @Override
     public UserDto getUserByEmail(String email) {
+        log.info("getUserByEmail {}", email);
         try {
             return this.restClient.get()
                     .uri("?email=" + email)
@@ -54,10 +74,12 @@ public class UserClientImpl implements UserClient {
                     .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> {
                         throw new NotFoundException(response.getStatusText());
                     }))
+                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                        throw new ServerErrorResponseException();
+                    })
                     .body(UserDto.class);
-        } catch (RestClientException e) {
-            log.error("sendEmail exception message: {}, cause: {}", e.getMessage(), e.getStackTrace());
-
+        } catch (ResourceAccessException e){
+            log.error("getUserByEmail error", e);
             throw new ServiceUnavailableException();
         }
     }
