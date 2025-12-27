@@ -2,7 +2,7 @@ package ru.stroy1click.confirmationcode.client.impl;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.web.client.ResourceAccessException;
-import ru.stroy1click.confirmationcode.exception.ServerErrorResponseException;
+import ru.stroy1click.confirmationcode.exception.ServiceErrorResponseException;
 import ru.stroy1click.confirmationcode.exception.ServiceUnavailableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +14,7 @@ import ru.stroy1click.confirmationcode.dto.UserDto;
 import ru.stroy1click.confirmationcode.exception.NotFoundException;
 import ru.stroy1click.confirmationcode.model.ConfirmEmailRequest;
 import ru.stroy1click.confirmationcode.model.UserServiceUpdatePasswordRequest;
+import ru.stroy1click.confirmationcode.util.ValidationErrorUtils;
 
 @Slf4j
 @Service
@@ -36,8 +37,8 @@ public class UserClientImpl implements UserClient {
                     .uri("/email-status")
                     .body(email)
                     .retrieve()
-                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-                        throw new ServerErrorResponseException();
+                    .onStatus(HttpStatusCode::isError,(request, response) -> {
+                        ValidationErrorUtils.validateStatus(response);
                     })
                     .body(String.class);
         }  catch (ResourceAccessException e){
@@ -54,8 +55,8 @@ public class UserClientImpl implements UserClient {
                     .uri("/password")
                     .body(updatePasswordRequest)
                     .retrieve()
-                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-                        throw new ServerErrorResponseException();
+                    .onStatus(HttpStatusCode::isError,(request, response) -> {
+                        ValidationErrorUtils.validateStatus(response);
                     })
                     .body(String.class);
         } catch (ResourceAccessException e){
@@ -65,17 +66,14 @@ public class UserClientImpl implements UserClient {
     }
 
     @Override
-    public UserDto getUserByEmail(String email) {
+    public UserDto getByEmail(String email) {
         log.info("getUserByEmail {}", email);
         try {
             return this.restClient.get()
-                    .uri("?email=" + email)
+                    .uri("/email?email={email}", email)
                     .retrieve()
-                    .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> {
-                        throw new NotFoundException(response.getStatusText());
-                    }))
-                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-                        throw new ServerErrorResponseException();
+                    .onStatus(HttpStatusCode::isError,(request, response) -> {
+                        ValidationErrorUtils.validateStatus(response);
                     })
                     .body(UserDto.class);
         } catch (ResourceAccessException e){

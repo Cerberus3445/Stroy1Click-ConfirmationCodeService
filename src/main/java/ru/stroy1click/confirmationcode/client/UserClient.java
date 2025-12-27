@@ -10,5 +10,5 @@ public interface UserClient {
 
     void updatePassword(UserServiceUpdatePasswordRequest request);
 
-    UserDto getUserByEmail(String email);
+    UserDto getByEmail(String email);
 }
