@@ -51,7 +51,7 @@ class ConfirmationCodeTests {
         HttpEntity<CreateConfirmationCodeRequest> httpEntity = new HttpEntity<>(new CreateConfirmationCodeRequest(Type.EMAIL,
                 "rayan_thompson@gmail.com"));
 
-        when(this.userClient.getUserByEmail("rayan_thompson@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("rayan_thompson@gmail.com")).thenReturn(userDto);
         doNothing().when(this.emailClient).sendEmail(any(SendEmailRequest.class));
 
         ResponseEntity<String> responseEntity = this.testRestTemplate.exchange(
@@ -79,7 +79,7 @@ class ConfirmationCodeTests {
                 .build();
         HttpEntity<CodeVerificationRequest> httpEntity = new HttpEntity<>(new CodeVerificationRequest("jeffbezos@gmail.com", 1_234_567));
 
-        when(this.userClient.getUserByEmail("jeffbezos@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("jeffbezos@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<String> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/email/verify",
@@ -109,7 +109,7 @@ class ConfirmationCodeTests {
                 "donaldtrump@gmail.com"));
 
         doNothing().when(this.emailClient).sendEmail(any(SendEmailRequest.class));
-        when(this.userClient.getUserByEmail("donaldtrump@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("donaldtrump@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<String> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/regeneration",
@@ -139,7 +139,7 @@ class ConfirmationCodeTests {
                 new CodeVerificationRequest("paveldurovtg@gmail.com", 1_234_567)));
 
         doNothing().when(this.authClient).logoutOnAllDevices(anyLong(), anyString());
-        when(this.userClient.getUserByEmail("paveldurovtg@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("paveldurovtg@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<String> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/password-reset",
@@ -184,7 +184,7 @@ class ConfirmationCodeTests {
 
         HttpEntity<CodeVerificationRequest> httpEntity = new HttpEntity<>(new CodeVerificationRequest("tomholland@gmail.com", 1111111));
 
-        when(this.userClient.getUserByEmail("tomholland@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("tomholland@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<ProblemDetail> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/email/verify",
@@ -212,7 +212,7 @@ class ConfirmationCodeTests {
         HttpEntity<UpdatePasswordRequest> httpEntity = new HttpEntity<>(new UpdatePasswordRequest("12345678", "87654321",
                 new CodeVerificationRequest("ryangosling@gmail.com", 1_234_567)));
 
-        when(this.userClient.getUserByEmail("ryangosling@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("ryangosling@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<ProblemDetail> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/password-reset",
@@ -239,7 +239,7 @@ class ConfirmationCodeTests {
         HttpEntity<CreateConfirmationCodeRequest> httpEntity = new HttpEntity<>(new CreateConfirmationCodeRequest(Type.EMAIL,
                 "tobymacgyver@gmail.com"));
 
-        when(this.userClient.getUserByEmail("tobymacgyver@gmail.com")).thenReturn(userDto);
+        when(this.userClient.getByEmail("tobymacgyver@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<ProblemDetail> responseEntity = this.testRestTemplate.exchange(
                 "/api/v1/confirmation-codes/regeneration",
