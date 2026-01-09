@@ -10,7 +10,7 @@ public interface ConfirmationCodeService {
 
     void recreate(CreateConfirmationCodeRequest codeRequest);
 
-    void confirmEmail(CodeVerificationRequest codeRequest);
+    void verifyEmail(CodeVerificationRequest codeRequest);
 
     void updatePassword(UpdatePasswordRequest passwordRequest);
 }

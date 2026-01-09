@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Builder
-@Table(schema = "auth", name = "confirmation_codes")
+@Table(schema = "confirmation_code", name = "confirmation_codes")
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConfirmationCode {

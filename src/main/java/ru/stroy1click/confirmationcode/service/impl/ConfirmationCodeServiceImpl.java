@@ -120,7 +120,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     * Если запрос на подтверждение кода недействителен, метод выбрасывает ValidationException.
     */
     @Override
-    public void confirmEmail(CodeVerificationRequest codeRequest) {
+    public void verifyEmail(CodeVerificationRequest codeRequest) {
         UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
 
         ConfirmationCode confirmationCode = this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, user.getId())
@@ -189,7 +189,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
         this.userClient.updatePassword(new UserServiceUpdatePasswordRequest(passwordRequest.getNewPassword(),
                 passwordRequest.getCodeVerificationRequest().getEmail()));
         this.confirmationCodeRepository.deleteByCode(confirmationCode.getCode());
-        this.authClient.logoutOnAllDevices(user.getId(), jwtUtil.generateToken(user));
+        this.authClient.logoutOnAllDevices(user.getId(), this.jwtUtil.generateToken(user));
     }
 
       /**

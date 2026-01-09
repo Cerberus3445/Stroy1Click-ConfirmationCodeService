@@ -157,7 +157,7 @@ class ConfirmationCodeTest {
         when(this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, 1L))
                 .thenReturn(Optional.of(confirmationCode));
 
-        this.confirmationCodeService.confirmEmail(request);
+        this.confirmationCodeService.verifyEmail(request);
 
         verify(this.userClient).updateEmailConfirmedStatus(new ConfirmEmailRequest("john.doe@example.com"));
         verify(this.confirmationCodeRepository).deleteById(1L);
@@ -171,7 +171,7 @@ class ConfirmationCodeTest {
                 .thenThrow(new NotFoundException("Код подтверждения не найден"));
 
         NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> this.confirmationCodeService.confirmEmail(request));
+                () -> this.confirmationCodeService.verifyEmail(request));
         assertEquals("Код подтверждения не найден", exception.getMessage());
     }
 
@@ -188,7 +188,7 @@ class ConfirmationCodeTest {
                 .thenReturn("Код подтверждения не валиден");
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> this.confirmationCodeService.confirmEmail(request));
+                () -> this.confirmationCodeService.verifyEmail(request));
         assertEquals("Код подтверждения не валиден", exception.getMessage());
 
         verify(this.userClient, never()).updateEmailConfirmedStatus(new ConfirmEmailRequest("john.doe@example.com"));
@@ -208,7 +208,7 @@ class ConfirmationCodeTest {
                 .thenReturn("Код подтверждения не валиден");
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> this.confirmationCodeService.confirmEmail(request));
+                () -> this.confirmationCodeService.verifyEmail(request));
         assertEquals("Код подтверждения не валиден", exception.getMessage());
 
         verify(this.userClient, never()).updateEmailConfirmedStatus(new ConfirmEmailRequest("john.doe@example.com"));
