@@ -18,10 +18,15 @@ spring:
     show-sql: true
     open-in-view: false
   datasource:
-    url: jdbc:postgresql://localhost:5433/stroy1click
+    url: jdbc:postgresql://localhost:5436/stroy1click
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
+  flyway:
+    url: jdbc:postgresql://localhost:5436/stroy1click
+    user: postgres
+    password: password
+    baseline-on-migrate: true
   messages:
     basename: messages
     encoding: UTF-8
@@ -67,6 +72,9 @@ resilience4j:
         waitDurationInOpenState: 120s
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
+        ignore-exceptions:
+          - ru.stroy1click.confirmationcode.exception.NotFoundException
+          - ru.stroy1click.confirmationcode.exception.ValidationException
       userClient:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED
@@ -76,6 +84,9 @@ resilience4j:
         waitDurationInOpenState: 120s
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
+        ignore-exceptions:
+          - ru.stroy1click.confirmationcode.exception.NotFoundException
+          - ru.stroy1click.confirmationcode.exception.ValidationException
       emailClient:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED
@@ -85,6 +96,9 @@ resilience4j:
         waitDurationInOpenState: 120s
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
+        ignore-exceptions:
+          - ru.stroy1click.confirmationcode.exception.NotFoundException
+          - ru.stroy1click.confirmationcode.exception.ValidationException
 
 management:
   health:

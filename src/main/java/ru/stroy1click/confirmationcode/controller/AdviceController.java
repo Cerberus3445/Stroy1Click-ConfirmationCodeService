@@ -73,7 +73,7 @@ public class AdviceController {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 this.messageSource.getMessage(
-                        "error.description.service_unavailable",
+                        "error.details.service_unavailable",
                         null,
                         Locale.getDefault()
                 )
@@ -91,7 +91,7 @@ public class AdviceController {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 this.messageSource.getMessage(
-                        "error.description.service_unavailable",
+                        "error.details.service_unavailable",
                         null,
                         Locale.getDefault()
                 )

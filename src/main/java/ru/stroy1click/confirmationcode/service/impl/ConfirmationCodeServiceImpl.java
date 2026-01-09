@@ -53,7 +53,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
      */
     @Override
     public void create(CreateConfirmationCodeRequest codeRequest) {
-        UserDto user = this.userClient.getUserByEmail(codeRequest.getEmail());
+        UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
 
         Integer countOfConfirmationCode = countCodesByTypeAndUser(user.getId(), codeRequest);
 
@@ -87,7 +87,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     */
     @Override
     public void recreate(CreateConfirmationCodeRequest codeRequest) {
-        UserDto user = this.userClient.getUserByEmail(codeRequest.getEmail());
+        UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
 
         Integer countOfConfirmationCode = countCodesByTypeAndUser(user.getId(), codeRequest);
 
@@ -120,8 +120,8 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     * Если запрос на подтверждение кода недействителен, метод выбрасывает ValidationException.
     */
     @Override
-    public void confirmEmail(CodeVerificationRequest codeRequest) {
-        UserDto user = this.userClient.getUserByEmail(codeRequest.getEmail());
+    public void verifyEmail(CodeVerificationRequest codeRequest) {
+        UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
 
         ConfirmationCode confirmationCode = this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, user.getId())
                 .orElseThrow(() -> new NotFoundException(
@@ -156,7 +156,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     */
     @Override
     public void updatePassword(UpdatePasswordRequest passwordRequest) {
-        UserDto user = this.userClient.getUserByEmail(passwordRequest.getCodeVerificationRequest().getEmail());
+        UserDto user = this.userClient.getByEmail(passwordRequest.getCodeVerificationRequest().getEmail());
 
         ConfirmationCode confirmationCode =  this.confirmationCodeRepository.findByTypeAndUserId(Type.PASSWORD,
                         user.getId())
@@ -189,7 +189,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
         this.userClient.updatePassword(new UserServiceUpdatePasswordRequest(passwordRequest.getNewPassword(),
                 passwordRequest.getCodeVerificationRequest().getEmail()));
         this.confirmationCodeRepository.deleteByCode(confirmationCode.getCode());
-        this.authClient.logoutOnAllDevices(user.getId(), jwtUtil.generateToken(user));
+        this.authClient.logoutOnAllDevices(user.getId(), this.jwtUtil.generateToken(user));
     }
 
       /**

@@ -8,8 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import ru.stroy1click.confirmationcode.client.AuthClient;
-import ru.stroy1click.confirmationcode.exception.ServerErrorResponseException;
+import ru.stroy1click.confirmationcode.exception.ServiceErrorResponseException;
 import ru.stroy1click.confirmationcode.exception.ServiceUnavailableException;
+import ru.stroy1click.confirmationcode.util.ValidationErrorUtils;
 
 @Slf4j
 @Service
@@ -33,8 +34,8 @@ public class AuthClientImpl implements AuthClient {
                             .queryParam("userId", userId).build())
                     .header("Authorization", "Bearer " + jwt)
                     .retrieve()
-                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-                        throw new ServerErrorResponseException();
+                    .onStatus(HttpStatusCode::isError,(request, response) -> {
+                        ValidationErrorUtils.validateStatus(response);
                     })
                     .body(String.class);
         } catch (ResourceAccessException e){

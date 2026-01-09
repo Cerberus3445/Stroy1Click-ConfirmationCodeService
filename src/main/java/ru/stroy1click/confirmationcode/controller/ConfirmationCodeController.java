@@ -31,13 +31,14 @@ public class ConfirmationCodeController {
 
     @PostMapping("/email/verify")
     @Operation(summary = "Подтверждение почты пользователя")
-    public ResponseEntity<String> confirmEmail(@RequestBody @Valid CodeVerificationRequest codeVerificationRequest,
+    public ResponseEntity<String> verifyEmail(@RequestBody @Valid CodeVerificationRequest codeVerificationRequest,
                                           BindingResult bindingResult){
         if(bindingResult.hasFieldErrors()) throw new ValidationException(ValidationErrorUtils.collectErrorsToString(
                 bindingResult.getFieldErrors()
         ));
 
-        this.confirmationCodeService.confirmEmail(codeVerificationRequest);
+        this.confirmationCodeService.verifyEmail(codeVerificationRequest);
+
         return ResponseEntity.ok(
                 this.messageSource.getMessage(
                         "info.confirmation_code.email.confirmed",
@@ -56,6 +57,7 @@ public class ConfirmationCodeController {
         ));
 
         this.confirmationCodeService.updatePassword(updatePasswordRequest);
+
         return ResponseEntity.ok(
                 this.messageSource.getMessage(
                         "info.password.successfully_updated",
