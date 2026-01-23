@@ -28,5 +28,5 @@ public class ConfirmationCode {
     @Enumerated(value = EnumType.STRING)
     private Type type;
 
-    private Long userId;
+    private String userEmail;
 }

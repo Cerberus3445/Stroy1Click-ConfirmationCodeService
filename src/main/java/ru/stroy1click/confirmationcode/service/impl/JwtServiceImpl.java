@@ -1,4 +1,4 @@
-package ru.stroy1click.confirmationcode.util;
+package ru.stroy1click.confirmationcode.service.impl;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -6,28 +6,30 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ru.stroy1click.confirmationcode.dto.UserDto;
+import ru.stroy1click.confirmationcode.service.JwtService;
 
 import java.security.Key;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
-public class JwtUtil {
+public class JwtServiceImpl implements JwtService {
 
     @Value(value = "${jwt.secret}")
     private String SECRET;
 
-    public String generateToken(UserDto user) {
+    public String generateToken() {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRole());
-        claims.put("emailConfirmed", user.getEmailConfirmed());
-        return createToken(claims, user);
+        claims.put("role", "ROLE_ADMIN");
+        claims.put("emailConfirmed", "true");
+        return createToken(claims);
     }
 
-    private String createToken(Map<String, Object> claims, UserDto user) {
+    private String createToken(Map<String, Object> claims) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getEmail())
+                .setSubject("admin@gmail.com")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 300))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();

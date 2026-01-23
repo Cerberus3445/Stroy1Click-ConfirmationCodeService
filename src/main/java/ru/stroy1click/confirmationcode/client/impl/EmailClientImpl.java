@@ -21,7 +21,7 @@ public class EmailClientImpl implements EmailClient {
 
     private final RestClient restClient;
 
-    public EmailClientImpl(@Value(value = "${url.service.email}") String url){
+    public EmailClientImpl(@Value(value = "${url.email}") String url){
         this.restClient = RestClient.builder()
                 .baseUrl(url)
                 .build();

@@ -23,7 +23,7 @@ public class UserClientImpl implements UserClient {
 
     private final RestClient restClient;
 
-    public UserClientImpl(@Value(value = "${url.service.user}") String url){
+    public UserClientImpl(@Value(value = "${url.user}") String url){
         this.restClient = RestClient.builder()
                 .baseUrl(url)
                 .build();

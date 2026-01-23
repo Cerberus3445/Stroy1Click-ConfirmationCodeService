@@ -5,5 +5,5 @@ create table if not exists confirmation_code.confirmation_codes(
     code int not null ,
     expiration_date timestamp not null ,
     type varchar not null ,
-    user_id bigint not null
+    user_email varchar not null
 );

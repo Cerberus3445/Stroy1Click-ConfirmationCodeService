@@ -138,7 +138,7 @@ class ConfirmationCodeTests {
         HttpEntity<UpdatePasswordRequest> httpEntity = new HttpEntity<>(new UpdatePasswordRequest("12345678", "12345678",
                 new CodeVerificationRequest("paveldurovtg@gmail.com", 1_234_567)));
 
-        doNothing().when(this.authClient).logoutOnAllDevices(anyLong(), anyString());
+        doNothing().when(this.authClient).logoutOnAllDevices(anyString(), anyString());
         when(this.userClient.getByEmail("paveldurovtg@gmail.com")).thenReturn(userDto);
 
         ResponseEntity<String> responseEntity = this.testRestTemplate.exchange(
