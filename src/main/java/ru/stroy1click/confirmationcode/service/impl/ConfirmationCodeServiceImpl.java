@@ -15,7 +15,7 @@ import ru.stroy1click.confirmationcode.exception.ValidationException;
 import ru.stroy1click.confirmationcode.model.*;
 import ru.stroy1click.confirmationcode.repository.ConfirmationCodeRepository;
 import ru.stroy1click.confirmationcode.service.ConfirmationCodeService;
-import ru.stroy1click.confirmationcode.util.JwtUtil;
+import ru.stroy1click.confirmationcode.service.JwtService;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -42,7 +42,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
 
     private final EmailClient emailClient;
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     /**
      * Метод создает новый код подтверждения для пользователя.
@@ -55,7 +55,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     public void create(CreateConfirmationCodeRequest codeRequest) {
         UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
 
-        Integer countOfConfirmationCode = countCodesByTypeAndUser(user.getId(), codeRequest);
+        Integer countOfConfirmationCode = countCodesByTypeAndUser(user.getEmail(), codeRequest);
 
         if(countOfConfirmationCode >= 1){ //The capacities allow you to send only 1 email
             throw new ValidationException(
@@ -71,7 +71,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
 
         ConfirmationCode confirmationCode = this.confirmationCodeRepository.save(new ConfirmationCode(
                 null, this.random.nextInt(1_000_000, 9_999_999),LocalDateTime.now().plusHours(EXPIRATION),
-                codeRequest.getConfirmationCodeType(), user.getId()
+                codeRequest.getConfirmationCodeType(), user.getEmail()
         ));
 
         sendEmail(confirmationCode.getCode(), user);
@@ -89,7 +89,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     public void recreate(CreateConfirmationCodeRequest codeRequest) {
         UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
 
-        Integer countOfConfirmationCode = countCodesByTypeAndUser(user.getId(), codeRequest);
+        Integer countOfConfirmationCode = countCodesByTypeAndUser(user.getEmail(), codeRequest);
 
         if(countOfConfirmationCode  == 0){ //не можем пересоздать код подтверждения, если его даже не было никогда
             throw new ValidationException(
@@ -101,13 +101,13 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
             );
         }
 
-        this.confirmationCodeRepository.deleteByTypeAndUserId(codeRequest.getConfirmationCodeType(), user.getId());
+        this.confirmationCodeRepository.deleteByTypeAndUserEmail(codeRequest.getConfirmationCodeType(), user.getEmail());
 
         checkTheEmailConfirmation(user, codeRequest);
 
         ConfirmationCode confirmationCode = this.confirmationCodeRepository.save(new ConfirmationCode(
                 null, this.random.nextInt(1_000_000, 9_999_999), LocalDateTime.now().plusHours(EXPIRATION),
-                codeRequest.getConfirmationCodeType(), user.getId()
+                codeRequest.getConfirmationCodeType(), user.getEmail()
         ));
 
         sendEmail(confirmationCode.getCode(), user);
@@ -121,9 +121,7 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     */
     @Override
     public void verifyEmail(CodeVerificationRequest codeRequest) {
-        UserDto user = this.userClient.getByEmail(codeRequest.getEmail());
-
-        ConfirmationCode confirmationCode = this.confirmationCodeRepository.findByTypeAndUserId(Type.EMAIL, user.getId())
+        ConfirmationCode confirmationCode = this.confirmationCodeRepository.findByTypeAndUserEmail(Type.EMAIL, codeRequest.getEmail())
                 .orElseThrow(() -> new NotFoundException(
                         this.messageSource.getMessage(
                                 "error.confirmation_code.not_found",
@@ -156,10 +154,8 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
     */
     @Override
     public void updatePassword(UpdatePasswordRequest passwordRequest) {
-        UserDto user = this.userClient.getByEmail(passwordRequest.getCodeVerificationRequest().getEmail());
-
-        ConfirmationCode confirmationCode =  this.confirmationCodeRepository.findByTypeAndUserId(Type.PASSWORD,
-                        user.getId())
+        ConfirmationCode confirmationCode =  this.confirmationCodeRepository.findByTypeAndUserEmail(Type.PASSWORD,
+                        passwordRequest.getCodeVerificationRequest().getEmail())
                 .orElseThrow(() -> new NotFoundException(this.messageSource.getMessage(
                         "error.confirmation_code.not_found",
                         null,
@@ -186,10 +182,11 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
             );
         }
 
+        this.confirmationCodeRepository.deleteByCode(confirmationCode.getCode());
+        this.authClient.logoutOnAllDevices(passwordRequest.getCodeVerificationRequest().getEmail(),
+                this.jwtService.generateToken());
         this.userClient.updatePassword(new UserServiceUpdatePasswordRequest(passwordRequest.getNewPassword(),
                 passwordRequest.getCodeVerificationRequest().getEmail()));
-        this.confirmationCodeRepository.deleteByCode(confirmationCode.getCode());
-        this.authClient.logoutOnAllDevices(user.getId(), this.jwtUtil.generateToken(user));
     }
 
       /**
@@ -214,15 +211,15 @@ public class ConfirmationCodeServiceImpl implements ConfirmationCodeService {
      /**
     * Метод подсчитывает количество кодов подтверждения пользователя по типу.
     * Метод возвращает количество кодов подтверждения.
-    * @param userId пользователь, для которого подсчитываются коды подтверждения.
+    * @param email пользователь, для которого подсчитываются коды подтверждения.
     * @param codeRequest запрос с типом кода подтверждения.
     * @return количество кодов подтверждения.
     */
-    private Integer countCodesByTypeAndUser(Long userId, CreateConfirmationCodeRequest codeRequest){
+    private Integer countCodesByTypeAndUser(String email, CreateConfirmationCodeRequest codeRequest){
         Integer count = 0;
         switch(codeRequest.getConfirmationCodeType()){
-            case EMAIL -> count += this.confirmationCodeRepository.countByTypeAndUserId(Type.EMAIL, userId);
-            case PASSWORD -> count += this.confirmationCodeRepository.countByTypeAndUserId(Type.PASSWORD, userId);
+            case EMAIL -> count += this.confirmationCodeRepository.countByTypeAndUserEmail(Type.EMAIL, email);
+            case PASSWORD -> count += this.confirmationCodeRepository.countByTypeAndUserEmail(Type.PASSWORD, email);
             default -> throw new ValidationException(
                     this.messageSource.getMessage(
                             "error.confirmation_code.not_valid",

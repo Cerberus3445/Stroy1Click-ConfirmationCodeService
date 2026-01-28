@@ -11,13 +11,14 @@ import java.util.Optional;
 @Repository
 public interface ConfirmationCodeRepository extends JpaRepository<ConfirmationCode, Long> {
 
-    Optional<ConfirmationCode> findByTypeAndUserId(Type type, Long userId);
+    Optional<ConfirmationCode> findByTypeAndUserEmail(Type type, String userEmail);
 
-    void deleteByTypeAndUserId(Type type, Long userId);
+    void deleteByTypeAndUserEmail(Type type, String userEmail);
 
-    Integer countByTypeAndUserId(Type type, Long userId);
+    Integer countByTypeAndUserEmail(Type type, String userEmail);
 
     void deleteByCode(Integer code);
 
-    List<ConfirmationCode> findAllByUserId(Long userId);
+    List<ConfirmationCode> findAllByUserEmail(String userEmail);
+
 }
