@@ -50,10 +50,6 @@ otel:
 server:
   port: 6060
 
-logging:
-  file:
-    path: logs
-
 resilience4j:
   ratelimiter:
     instances:
